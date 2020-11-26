@@ -223,7 +223,7 @@ PodListLoop:
 		}
 		g["pod"][rawEntityID] = rawPodMetrics
 
-	if enableVolumeMetrics {
+		if enableVolumeMetrics {
 		VolumeListLoop:
 			for _, volume := range pod.VolumeStats {
 				rawVolumeMetrics, err := fetchVolumeStats(volume)
@@ -236,12 +236,12 @@ PodListLoop:
 				rawEntityID = fmt.Sprintf("%s_%s_%s", rawPodMetrics["namespace"], rawPodMetrics["podName"], rawVolumeMetrics["volumeName"])
 				g["volume"][rawEntityID] = rawVolumeMetrics
 			}
+		}
 
-			if pod.Containers == nil {
-				// Some pods could have no containers yet or containers could be in a back-off pulling image status.
-				continue PodListLoop
-			}
-	}
+		if pod.Containers == nil {
+			// Some pods could have no containers yet or containers could be in a back-off pulling image status.
+			continue PodListLoop
+		}
 
 	ContainerListLoop:
 		for _, container := range pod.Containers {
