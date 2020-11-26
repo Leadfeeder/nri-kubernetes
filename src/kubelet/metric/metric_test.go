@@ -181,7 +181,141 @@ func TestGroupStatsSummary_CorrectValue(t *testing.T) {
 	summary, err := toSummary(string(responseOkDataSample))
 	assert.NoError(t, err)
 
-	rawData, errs := GroupStatsSummary(summary)
+	rawData, errs := GroupStatsSummary(summary, true)
+	assert.Empty(t, errs)
+	assert.Equal(t, expectedRawData, rawData)
+}
+
+func TestGroupStatsSummary_VolumeMetricsDisabled(t *testing.T) {
+	expectedRawData := definition.RawGroups{
+		"node": {
+			"fooNode": definition.RawMetrics{
+				"nodeName": "fooNode",
+				// CPU
+				"usageNanoCores":       uint64(64124211),
+				"usageCoreNanoSeconds": uint64(353998913059080),
+				// Memory
+				"memoryUsageBytes":      uint64(687067136),
+				"memoryAvailableBytes":  uint64(502603776),
+				"memoryWorkingSetBytes": uint64(540618752),
+				"memoryRssBytes":        uint64(150396928),
+				"memoryPageFaults":      uint64(3067606235),
+				"memoryMajorPageFaults": uint64(517653),
+				// Network
+				"rxBytes": uint64(51419684038),
+				"txBytes": uint64(25630208577),
+				"errors":  uint64(0),
+				"interfaces": map[string]definition.RawMetrics{
+					"ens5": {
+						"rxBytes": uint64(51419684038),
+						"txBytes": uint64(25630208577),
+						"errors":  uint64(0),
+					},
+					"ip6tnl0": {
+						"rxBytes": uint64(0),
+						"txBytes": uint64(0),
+						"errors":  uint64(0),
+					},
+				},
+				// Fs
+				"fsAvailableBytes": uint64(92795400192),
+				"fsCapacityBytes":  uint64(128701009920),
+				"fsUsedBytes":      uint64(30305800192),
+				"fsInodesFree":     uint64(32999604),
+				"fsInodes":         uint64(33554432),
+				"fsInodesUsed":     uint64(554828),
+				// Runtime
+				"runtimeAvailableBytes": uint64(92795400192),
+				"runtimeCapacityBytes":  uint64(128701009920),
+				"runtimeUsedBytes":      uint64(20975835934),
+				"runtimeInodesFree":     uint64(32999604),
+				"runtimeInodes":         uint64(33554432),
+				"runtimeInodesUsed":     uint64(554828),
+			},
+		},
+		"pod": {
+			"kube-system_newrelic-infra-monitoring-pjp0v": definition.RawMetrics{
+				"podName":   "newrelic-infra-monitoring-pjp0v",
+				"namespace": "kube-system",
+				"rxBytes":   uint64(15741653),
+				"errors":    uint64(0),
+				"txBytes":   uint64(19551073),
+				"interfaces": map[string]definition.RawMetrics{
+					"eth0": {
+						"rxBytes": uint64(15741653),
+						"errors":  uint64(0),
+						"txBytes": uint64(19551073),
+					},
+				},
+			},
+			"kube-system_kube-dns-910330662-pflkj": definition.RawMetrics{
+				"podName":   "kube-dns-910330662-pflkj",
+				"namespace": "kube-system",
+				"rxBytes":   uint64(14447980),
+				"errors":    uint64(0),
+				"txBytes":   uint64(15557657),
+				"interfaces": map[string]definition.RawMetrics{
+					"eth0": {
+						"rxBytes": uint64(14447980),
+						"errors":  uint64(0),
+						"txBytes": uint64(15557657),
+					},
+				},
+			},
+		},
+		"volume": {},
+		"container": {
+			"kube-system_newrelic-infra-monitoring-pjp0v_kube-state-metrics": definition.RawMetrics{
+				"containerName":    "kube-state-metrics",
+				"usageBytes":       uint64(22552576),
+				"workingSetBytes":  uint64(15196160),
+				"usageNanoCores":   uint64(184087),
+				"podName":          "newrelic-infra-monitoring-pjp0v",
+				"namespace":        "kube-system",
+				"fsAvailableBytes": uint64(6911750144),
+				"fsCapacityBytes":  uint64(17293533184),
+				"fsInodes":         uint64(9732096),
+				"fsInodesFree":     uint64(9574871),
+				"fsInodesUsed":     uint64(24),
+				"fsUsedBytes":      uint64(35000320),
+			},
+			"kube-system_newrelic-infra-monitoring-pjp0v_newrelic-infra": definition.RawMetrics{
+				"containerName":    "newrelic-infra",
+				"usageBytes":       uint64(243638272),
+				"workingSetBytes":  uint64(38313984),
+				"usageNanoCores":   uint64(13046199),
+				"podName":          "newrelic-infra-monitoring-pjp0v",
+				"namespace":        "kube-system",
+				"fsAvailableBytes": uint64(6911750144),
+				"fsCapacityBytes":  uint64(17293533184),
+				"fsInodes":         uint64(9732096),
+				"fsInodesFree":     uint64(9574871),
+				"fsInodesUsed":     uint64(52),
+				"fsUsedBytes":      uint64(1305837568),
+			},
+			"kube-system_kube-dns-910330662-pflkj_dnsmasq": definition.RawMetrics{
+				"containerName":    "dnsmasq",
+				"usageBytes":       uint64(19812352),
+				"workingSetBytes":  uint64(12828672),
+				"usageNanoCores":   uint64(208374),
+				"podName":          "kube-dns-910330662-pflkj",
+				"namespace":        "kube-system",
+				"fsAvailableBytes": uint64(6911750144),
+				"fsCapacityBytes":  uint64(17293533184),
+				"fsInodes":         uint64(9732096),
+				"fsInodesFree":     uint64(9574871),
+				"fsInodesUsed":     uint64(20),
+				"fsUsedBytes":      uint64(42041344),
+			},
+		},
+	}
+
+	responseOkDataSample, err := ioutil.ReadFile("testdata/kubelet_summary_response_ok.json")
+	require.NoError(t, err)
+	summary, err := toSummary(string(responseOkDataSample))
+	assert.NoError(t, err)
+
+	rawData, errs := GroupStatsSummary(summary, false)
 	assert.Empty(t, errs)
 	assert.Equal(t, expectedRawData, rawData)
 }
@@ -293,7 +427,7 @@ func TestGroupStatsSummary_MissingNodeData_ContainerWithTheSameName(t *testing.T
 	summary, err := toSummary(responseContainerWithTheSameName)
 	assert.NoError(t, err)
 
-	rawData, errs := GroupStatsSummary(summary)
+	rawData, errs := GroupStatsSummary(summary, true)
 	assert.EqualError(t, errs[0], "empty node identifier, possible data error in /stats/summary response")
 	assert.Equal(t, expectedRawData, rawData)
 }
@@ -318,7 +452,7 @@ func TestGroupStatsSummary_IncompleteStatsSummaryMessage_MissingNodeData_Missing
 	summary, err := toSummary(responseMissingContainerName)
 	assert.NoError(t, err)
 
-	rawData, errs := GroupStatsSummary(summary)
+	rawData, errs := GroupStatsSummary(summary, true)
 	assert.Len(t, errs, 2, "Not expected length of errors")
 	assert.Equal(t, expectedRawData, rawData)
 }
@@ -334,7 +468,7 @@ func TestGroupStatsSummary_IncompleteStatsSummaryMessage_MissingNodeData_Missing
 	summary, err := toSummary(responseMissingPodName)
 	assert.NoError(t, err)
 
-	rawData, errs := GroupStatsSummary(summary)
+	rawData, errs := GroupStatsSummary(summary, true)
 	assert.Len(t, errs, 2, "Not expected length of errors")
 	assert.Len(t, rawData, 4, "Not expected length of rawData for pods and containers")
 	assert.Equal(t, expectedRawData, rawData)
@@ -372,7 +506,7 @@ func TestGroupStatsSummary_IncompleteStatsSummaryMessage_MissingNodeData_NoRxByt
 	summary, err := toSummary(responseMissingRxBytesForPod)
 	assert.NoError(t, err)
 
-	rawData, errs := GroupStatsSummary(summary)
+	rawData, errs := GroupStatsSummary(summary, true)
 	assert.Len(t, errs, 1, "Not expected length of errors")
 	assert.Equal(t, expectedRawData, rawData)
 }
@@ -380,7 +514,7 @@ func TestGroupStatsSummary_IncompleteStatsSummaryMessage_MissingNodeData_NoRxByt
 func TestGroupStatsSummary_EmptyStatsSummaryMessage(t *testing.T) {
 	var summary = new(v1.Summary)
 
-	rawData, errs := GroupStatsSummary(*summary)
+	rawData, errs := GroupStatsSummary(*summary, true)
 
 	assert.Len(t, errs, 2, "Not expected length of errors")
 	assert.Len(t, rawData, 4, "Not expected length of rawData for pods and containers")

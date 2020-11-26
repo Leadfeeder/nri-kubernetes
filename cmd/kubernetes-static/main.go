@@ -75,6 +75,7 @@ func main() {
 		logger,
 		apiServerClient,
 		"ens5",
+		true,
 		podsFetcher.FetchFuncWithCache(),
 		metric2.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries))
 	// KSM

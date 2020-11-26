@@ -192,7 +192,7 @@ func fetchVolumeStats(v v1.VolumeStats) (definition.RawMetrics, error) {
 }
 
 // GroupStatsSummary groups specific data for pods, containers and node
-func GroupStatsSummary(statsSummary v1.Summary) (definition.RawGroups, []error) {
+func GroupStatsSummary(statsSummary v1.Summary, enableVolumeMetrics bool) (definition.RawGroups, []error) {
 	var errs []error
 	var rawEntityID string
 	g := definition.RawGroups{
@@ -222,23 +222,26 @@ PodListLoop:
 			continue PodListLoop
 		}
 		g["pod"][rawEntityID] = rawPodMetrics
-	VolumeListLoop:
-		for _, volume := range pod.VolumeStats {
-			rawVolumeMetrics, err := fetchVolumeStats(volume)
-			if err != nil {
-				errs = append(errs, err)
-				continue VolumeListLoop
-			}
-			rawVolumeMetrics["podName"] = rawPodMetrics["podName"]
-			rawVolumeMetrics["namespace"] = rawPodMetrics["namespace"]
-			rawEntityID = fmt.Sprintf("%s_%s_%s", rawPodMetrics["namespace"], rawPodMetrics["podName"], rawVolumeMetrics["volumeName"])
-			g["volume"][rawEntityID] = rawVolumeMetrics
-		}
 
-		if pod.Containers == nil {
-			// Some pods could have no containers yet or containers could be in a back-off pulling image status.
-			continue PodListLoop
-		}
+	if enableVolumeMetrics {
+		VolumeListLoop:
+			for _, volume := range pod.VolumeStats {
+				rawVolumeMetrics, err := fetchVolumeStats(volume)
+				if err != nil {
+					errs = append(errs, err)
+					continue VolumeListLoop
+				}
+				rawVolumeMetrics["podName"] = rawPodMetrics["podName"]
+				rawVolumeMetrics["namespace"] = rawPodMetrics["namespace"]
+				rawEntityID = fmt.Sprintf("%s_%s_%s", rawPodMetrics["namespace"], rawPodMetrics["podName"], rawVolumeMetrics["volumeName"])
+				g["volume"][rawEntityID] = rawVolumeMetrics
+			}
+
+			if pod.Containers == nil {
+				// Some pods could have no containers yet or containers could be in a back-off pulling image status.
+				continue PodListLoop
+			}
+	}
 
 	ContainerListLoop:
 		for _, container := range pod.Containers {
