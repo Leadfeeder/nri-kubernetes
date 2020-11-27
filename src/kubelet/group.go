@@ -18,6 +18,7 @@ type kubelet struct {
 	fetchers                []data.FetchFunc
 	logger                  *logrus.Logger
 	defaultNetworkInterface string
+	enableVolumeMetrics     bool
 }
 
 func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.ErrorGroup) {
@@ -52,7 +53,7 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 		}
 	}
 
-	resources, errs := metric.GroupStatsSummary(response)
+	resources, errs := metric.GroupStatsSummary(response, r.enableVolumeMetrics)
 	if len(errs) != 0 {
 		return nil, &data.ErrorGroup{Recoverable: true, Errors: errs}
 	}
@@ -81,13 +82,14 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 }
 
 // NewGrouper creates a grouper aware of Kubelet raw metrics.
-func NewGrouper(c client.HTTPClient, logger *logrus.Logger, apiServer apiserver.Client, defaultNetworkInterface string, fetchers ...data.FetchFunc) data.Grouper {
+func NewGrouper(c client.HTTPClient, logger *logrus.Logger, apiServer apiserver.Client, defaultNetworkInterface string, enableVolumeMetrics bool, fetchers ...data.FetchFunc) data.Grouper {
 	return &kubelet{
 		apiServer:               apiServer,
 		client:                  c,
 		logger:                  logger,
 		fetchers:                fetchers,
 		defaultNetworkInterface: defaultNetworkInterface,
+		enableVolumeMetrics:     enableVolumeMetrics,
 	}
 }
 

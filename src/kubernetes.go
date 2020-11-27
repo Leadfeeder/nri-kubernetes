@@ -53,6 +53,7 @@ type argumentList struct {
 	ControllerManagerEndpointURL string `help:"Set a custom endpoint URL for the kube-controller-manager endpoint."`
 	APIServerEndpointURL         string `help:"Set a custom endpoint URL for the API server endpoint."`
 	NetworkRouteFile             string `help:"Route file to get the default interface from. If left empty on Linux /proc/net/route will be used by default"`
+	EnableVolumeMetrics          bool   `default:"true" help:"Used to disable Volume metrics. Enabled by default"`
 }
 
 const (
@@ -359,6 +360,7 @@ func main() {
 		logger,
 		apiServerClient,
 		defaultNetworkInterface,
+		args.EnableVolumeMetrics,
 		podsFetcher,
 		metric2.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries),
 	)
